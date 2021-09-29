@@ -9,7 +9,7 @@ import (
 )
 
 type Database struct {
-	RedisClient *cache.RedisClient
+	RedisClient cache.RedisClient
 	Mongo       string
 }
 
@@ -32,7 +32,7 @@ func InitDatabases(ctx context.Context, redisConf cache.RedisConfig, logger mode
 	// })
 
 	return &Database{
-		RedisClient: &redisClient,
+		RedisClient: redisClient,
 		Mongo:       "unimplemented hehe",
 	}, nil
 }

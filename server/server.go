@@ -55,6 +55,14 @@ func (s *ChatServer) ChatInitiate(ctx context.Context, in *pb.InitiateRequest) (
 	//  avatar := in.AvatarUrl
 	newID := int32(rand.Intn(10000))
 	log.Printf("Received chat initiate request, returning id %d", newID)
+	// TODO: continue from here https://youtu.be/x4ZtPARk5yI?t=897
+	// allUsers := s.database.RedisClient.ListUsers()
+	// for i := range allUsers {
+	// 	if allUsers[i] == in.Name {
+	// 		// Found!
+	// 		break
+	// 	}
+	// }
 	return &pb.InitiateResponse{Id: newID}, nil
 }
 
