@@ -6,6 +6,9 @@ import (
 	"time"
 
 	"github.com/AkinAD/grpc_chat_fromNodeToGo/models"
+	pb "github.com/AkinAD/grpc_chat_fromNodeToGo/proto"
+	"google.golang.org/protobuf/encoding/protojson"
+
 	"github.com/go-redis/redis/v8"
 )
 
@@ -25,6 +28,15 @@ type RedisCache struct {
 type RedisClient interface {
 	Set(key string, value *[]byte)
 	Get(key string) *[]byte
+	AddUser(user pb.User)
+	ListUsers() []string
+	GetSession(key string) *models.Session
+	SetSession(key string, sesh models.Session)
+}
+
+var redis_keys = map[string]string{
+	"broadcastRoom": "room:0:messages",
+	"users":         "users",
 }
 
 func NewRedisCache(ctx context.Context, host string, db int, exp time.Duration, logger models.Logger) (RedisClient, error) {
@@ -68,6 +80,34 @@ func (cache *RedisCache) Get(key string) *[]byte {
 	return &res
 }
 
+// ================ converted from video tutorial ====================
+func (cache *RedisCache) AddUser(user pb.User) {
+	m := protojson.MarshalOptions{
+		Indent:          "  ",
+		EmitUnpopulated: true,
+	}
+
+	json, err := m.Marshal(&user)
+	if err != nil {
+		cache.Logger.Error.Panicf("ProtoJson unnable to Marshal value: %v", err)
+	}
+	cache.Client.RPush(cache.ctx, redis_keys["user"], json)
+}
+
+func (cache *RedisCache) ListUsers() []string {
+	fetched, err := cache.Client.LRange(cache.ctx, redis_keys["users"], 0, -1).Result()
+	if err != nil {
+		cache.Logger.Error.Printf("Error reading users list from cache: %v", err)
+	}
+	// var users []pb.User
+	// for _, item := range fetched {
+	// 	user := &pb.User{}
+	// 	protojson.Unmarshal([]byte(item), user)
+	// 	users = append(users, *user)
+	// }
+	return fetched
+}
+
 func (cache *RedisCache) GetSession(key string) *models.Session {
 	session := models.Session{}
 	fetched := cache.Get(key)
@@ -84,6 +124,7 @@ func (cache *RedisCache) SetSession(key string, sesh models.Session) {
 	json, err := json.Marshal(sesh)
 	if err != nil {
 		cache.Logger.Error.Panicf("Unable to Marshal value: %v", err)
+
 	}
 	cache.Set(key, &json)
 
