@@ -12,6 +12,6 @@ services:
     volumes:
       - ./data:/bitnami/redis/data
     environment:
-      - ALLOW_EMPTY_PASSWORD=yes
+      - ALLOW_EMPTY_PASSWORD=yes # Todo: CHANGE THIS FOR SECURITY
     ports:
       - "6379:6379"
