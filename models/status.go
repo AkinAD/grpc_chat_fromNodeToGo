@@ -5,7 +5,7 @@ type Status string
 const (
 	ONLINE  Status = "ONLINE"
 	OFFLINE Status = "OFFLINE"
-	UNKNOWN Status = "UNKOWN"
+	UNKNOWN Status = "UNKNOWN"
 )
 
 func (s Status) String() string {

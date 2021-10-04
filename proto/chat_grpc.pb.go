@@ -23,6 +23,7 @@ type ChatServiceClient interface {
 	SendMessage(ctx context.Context, in *MessageRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UserStream(ctx context.Context, in *StreamRequest, opts ...grpc.CallOption) (ChatService_UserStreamClient, error)
 	ChatStream(ctx context.Context, in *StreamRequest, opts ...grpc.CallOption) (ChatService_ChatStreamClient, error)
+	UploadImage(ctx context.Context, opts ...grpc.CallOption) (ChatService_UploadImageClient, error)
 }
 
 type chatServiceClient struct {
@@ -115,6 +116,40 @@ func (x *chatServiceChatStreamClient) Recv() (*StreamMessage, error) {
 	return m, nil
 }
 
+func (c *chatServiceClient) UploadImage(ctx context.Context, opts ...grpc.CallOption) (ChatService_UploadImageClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ChatService_ServiceDesc.Streams[2], "/chat.ChatService/UploadImage", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &chatServiceUploadImageClient{stream}
+	return x, nil
+}
+
+type ChatService_UploadImageClient interface {
+	Send(*UploadImageRequest) error
+	CloseAndRecv() (*UploadImageResponse, error)
+	grpc.ClientStream
+}
+
+type chatServiceUploadImageClient struct {
+	grpc.ClientStream
+}
+
+func (x *chatServiceUploadImageClient) Send(m *UploadImageRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *chatServiceUploadImageClient) CloseAndRecv() (*UploadImageResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(UploadImageResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ChatServiceServer is the server API for ChatService service.
 // All implementations must embed UnimplementedChatServiceServer
 // for forward compatibility
@@ -123,6 +158,7 @@ type ChatServiceServer interface {
 	SendMessage(context.Context, *MessageRequest) (*emptypb.Empty, error)
 	UserStream(*StreamRequest, ChatService_UserStreamServer) error
 	ChatStream(*StreamRequest, ChatService_ChatStreamServer) error
+	UploadImage(ChatService_UploadImageServer) error
 	mustEmbedUnimplementedChatServiceServer()
 }
 
@@ -141,6 +177,9 @@ func (UnimplementedChatServiceServer) UserStream(*StreamRequest, ChatService_Use
 }
 func (UnimplementedChatServiceServer) ChatStream(*StreamRequest, ChatService_ChatStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method ChatStream not implemented")
+}
+func (UnimplementedChatServiceServer) UploadImage(ChatService_UploadImageServer) error {
+	return status.Errorf(codes.Unimplemented, "method UploadImage not implemented")
 }
 func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
 
@@ -233,6 +272,32 @@ func (x *chatServiceChatStreamServer) Send(m *StreamMessage) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _ChatService_UploadImage_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ChatServiceServer).UploadImage(&chatServiceUploadImageServer{stream})
+}
+
+type ChatService_UploadImageServer interface {
+	SendAndClose(*UploadImageResponse) error
+	Recv() (*UploadImageRequest, error)
+	grpc.ServerStream
+}
+
+type chatServiceUploadImageServer struct {
+	grpc.ServerStream
+}
+
+func (x *chatServiceUploadImageServer) SendAndClose(m *UploadImageResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *chatServiceUploadImageServer) Recv() (*UploadImageRequest, error) {
+	m := new(UploadImageRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ChatService_ServiceDesc is the grpc.ServiceDesc for ChatService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -259,6 +324,11 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "ChatStream",
 			Handler:       _ChatService_ChatStream_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "UploadImage",
+			Handler:       _ChatService_UploadImage_Handler,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "proto/chat.proto",

@@ -9,7 +9,7 @@ service ChatService {
     rpc SendMessage(MessageRequest) returns (google.protobuf.Empty){};
     rpc UserStream(StreamRequest) returns (stream UserStreamResponse){};
     rpc ChatStream(StreamRequest) returns (stream  StreamMessage){}
-
+    rpc UploadImage(stream UploadImageRequest) returns (UploadImageResponse){}
 }
 
 message InitiateRequest {
@@ -18,16 +18,16 @@ message InitiateRequest {
 }
 
 message InitiateResponse {
-    int32 id = 1;
+    string id = 1;
 }
 
 message MessageRequest {
-    int32 id = 1;
+    string id = 1;
     string message = 2;
 }
 
 message StreamRequest {
-    int32 id = 1;
+    string id = 1;
 }
 
 enum Status {
@@ -37,16 +37,45 @@ enum Status {
 }
 
 message User {
-    int32 id =1;
+    string id =1;
     string name =2;
     string status = 3;
     string avatar_url = 4;
 }
 message UserStreamResponse {
-    repeated User user = 1;
+    repeated User users = 1;
+}
+
+enum MessageType {
+	TEXT  = 0;
+	MEDIA = 1;
+	FILE =  2;
+	UNKNOWN_FORMAT = 3;
 }
 
 message StreamMessage {
-    int32 id =1;
-    string message = 2;
+    string user_id = 1;
+    string user_avatar = 2;
+    string user_name = 3;
+    string message = 4;
+    string message_type = 5;
+}
+
+message UploadImageRequest {
+    oneof data {
+        ImageInfo info =1;
+        bytes chunk_data = 2;
+
+    }
+}
+
+message ImageInfo {
+    string file_name = 1;
+    string image_type = 2;
+}
+
+message UploadImageResponse {
+    string id = 1;
+    string size =2;
+    string url = 3;
 }

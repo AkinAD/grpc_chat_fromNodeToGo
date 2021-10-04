@@ -4,6 +4,8 @@ go 1.17
 
 require (
 	github.com/go-redis/redis/v8 v8.11.3
+	github.com/google/uuid v1.3.0
+	github.com/mattn/go-sqlite3 v1.14.8
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 )
